@@ -48,7 +48,7 @@ services:
       - "traefik.http.services.mailcow-svc.loadbalancer.server.port=80"
 
       # AUTOCONFIG (Outlook/Thunderbird)
-      - "traefik.http.routers.mailcow-autoconfig.rule=Host(`autoconfig.${MAILCOW_HOSTNAME#*.}`) || Host(`autodiscover.${MAILCOW_HOSTNAME#*.}`)"
+      - "traefik.http.routers.mailcow-autoconfig.rule=Host(`autoconfig.ztechai.us`) || Host(`autodiscover.ztechai.us`)"
       - "traefik.http.routers.mailcow-autoconfig.entrypoints=websecure"
       - "traefik.http.routers.mailcow-autoconfig.tls=true"
       - "traefik.http.routers.mailcow-autoconfig.tls.certresolver=letsencrypt"
