@@ -2,7 +2,7 @@ version: '2.1'
 
 services:
   # -------------------------------------------------------------------------
-  # NGINX (GHCR)
+  # NGINX (Traefik Interface)
   # -------------------------------------------------------------------------
   nginx-mailcow:
     image: ghcr.io/mailcow/nginx:1.25
@@ -47,11 +47,10 @@ services:
       - "traefik.http.routers.mailcow-autoconfig.tls.certresolver=letsencrypt"
 
   # -------------------------------------------------------------------------
-  # CORE SERVICES (GHCR for Mailcow, Official for DBs)
+  # CORE SERVICES (Verified GHCR Tags)
   # -------------------------------------------------------------------------
   
   dockerapi-mailcow:
-    # Changed to a known stable GHCR tag
     image: ghcr.io/mailcow/dockerapi:2.0.2
     restart: always
     environment:
@@ -66,7 +65,6 @@ services:
           - dockerapi
 
   mysql-mailcow:
-    # Use Official MariaDB (Reliable)
     image: mariadb:10.5
     command: --default-authentication-plugin=mysql_native_password --innodb-buffer-pool-size=64M
     restart: always
@@ -84,7 +82,6 @@ services:
           - mysql
 
   redis-mailcow:
-    # Use Official Redis (Reliable)
     image: redis:7-alpine
     restart: always
     volumes:
@@ -95,7 +92,7 @@ services:
           - redis
 
   clamd-mailcow:
-    image: ghcr.io/mailcow/clamd:1.64
+    image: ghcr.io/mailcow/clamd:1.66
     restart: always
     volumes:
       - /opt/mailcow-data/clamd:/var/lib/clamav:rw
@@ -122,7 +119,7 @@ services:
           - postfix
 
   dovecot-mailcow:
-    image: ghcr.io/mailcow/dovecot:2.2
+    image: ghcr.io/mailcow/dovecot:1.23
     restart: always
     environment:
       - DOVECOT_MASTER_USER=${DOVECOT_MASTER_USER:-}
@@ -231,7 +228,7 @@ services:
     network_mode: "host"
 
   watchdog-mailcow:
-    image: ghcr.io/mailcow/watchdog:2.02
+    image: ghcr.io/mailcow/watchdog:2.03
     restart: always
     volumes:
       - /var/run/docker.sock:/var/run/docker.sock:ro
