@@ -83,8 +83,8 @@ services:
 
   redis-mailcow:
     image: redis:7-alpine
-    # This forces Redis to use the password defined in your environment
-    command: redis-server --requirepass "${REDISPASS}"
+    # Use Array syntax for command to avoid quoting issues
+    command: ["redis-server", "--requirepass", "SecureRedisPass2025"]
     restart: always
     volumes:
       - /opt/mailcow-data/redis:/data:rw
@@ -92,6 +92,12 @@ services:
       mailcow-network:
         aliases:
           - redis
+    # Add a healthcheck so we know if it's alive
+    healthcheck:
+      test: ["CMD", "redis-cli", "-a", "SecureRedisPass2025", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
 
   clamd-mailcow:
     image: ghcr.io/mailcow/clamd:1.71
