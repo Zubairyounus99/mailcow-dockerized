@@ -72,7 +72,8 @@ services:
           - dockerapi
 
   mysql-mailcow:
-    image: mailcow/mysql:8
+    # CORRECTED IMAGE:
+    image: mariadb:10.5
     command: --default-authentication-plugin=mysql_native_password --innodb-buffer-pool-size=64M
     restart: always
     environment:
