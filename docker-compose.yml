@@ -84,7 +84,7 @@ services:
   redis-mailcow:
     image: redis:7-alpine
     # This forces Redis to use the password defined in your environment
-    command: redis-server --requirepass ${REDISPASS}
+    command: redis-server --requirepass "${REDISPASS}"
     restart: always
     volumes:
       - /opt/mailcow-data/redis:/data:rw
