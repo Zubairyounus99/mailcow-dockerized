@@ -12,8 +12,8 @@ services:
       - redis-mailcow
     command: /bin/bash -c "envsubst < /etc/nginx/conf.d/templates/listen_plain.template > /etc/nginx/conf.d/listen_plain.conf && envsubst < /etc/nginx/conf.d/templates/listen_ssl.template > /etc/nginx/conf.d/listen_ssl.conf && envsubst < /etc/nginx/conf.d/templates/server_name.template > /etc/nginx/conf.d/server_name.conf && nginx -g 'daemon off;'"
     environment:
-      # Ensure IPV4_NETWORK is passed so Nginx can ping containers
-      - IPV4_NETWORK=${IPV4_NETWORK:-172.22.1}
+      # CRITICAL: Must be passed so Nginx can check network health
+      - IPV4_NETWORK=${IPV4_NETWORK:-10.123.123}
       - HTTPS_PORT=${HTTPS_PORT:-8443}
       - HTTP_PORT=${HTTP_PORT:-8080}
       - MAILCOW_HOSTNAME=${MAILCOW_HOSTNAME}
@@ -56,7 +56,6 @@ services:
     image: ghcr.io/mailcow/dockerapi:2.11
     restart: always
     environment:
-      # ADDED DBHOST
       - DBHOST=mysql
       - DBUSER=${DBUSER}
       - DBNAME=${DBNAME}
@@ -86,8 +85,8 @@ services:
           - mysql
 
   redis-mailcow:
-    image: redis:7.4.6-alpine
-    # Hardcoded password to ensure stability
+    image: redis:7-alpine
+    # Matches your .env variable REDISPASS=SecureRedisPass2025
     command: ["redis-server", "--requirepass", "SecureRedisPass2025"]
     restart: always
     volumes:
@@ -118,6 +117,7 @@ services:
     environment:
       - TZ=${TZ}
       - DBHOST=mysql
+      - REDISHOST=redis
     volumes:
       - /opt/mailcow-data/postfix:/opt/postfix/conf:rw
       - /opt/mailcow-data/postfix/postfix-vol-1:/var/spool/postfix:rw
@@ -137,6 +137,7 @@ services:
       - DOVECOT_MASTER_USER=${DOVECOT_MASTER_USER:-}
       - DOVECOT_MASTER_PASS=${DOVECOT_MASTER_PASS:-}
       - DBHOST=mysql
+      - REDISHOST=redis
       - TZ=${TZ}
     volumes:
       - /opt/mailcow-data/dovecot:/etc/dovecot/sql:rw
@@ -162,7 +163,6 @@ services:
     depends_on:
       - redis-mailcow
     environment:
-      # ADDED DBHOST & REDISHOST
       - DBHOST=mysql
       - REDISHOST=redis
       - DBNAME=${DBNAME}
@@ -189,8 +189,8 @@ services:
     image: ghcr.io/mailcow/sogo:1.136
     restart: always
     environment:
-      # ADDED DBHOST
       - DBHOST=mysql
+      - REDISHOST=redis
       - DBNAME=${DBNAME}
       - DBUSER=${DBUSER}
       - DBPASS=${DBPASS}
@@ -287,6 +287,7 @@ networks:
     ipam:
       driver: default
       config:
+        # MATCHES YOUR DOKPLOY IPV4_NETWORK VARIABLE
         - subnet: 10.123.123.0/24
   dokploy-network:
     external: true
