@@ -5,7 +5,7 @@ services:
   # NGINX
   # -------------------------------------------------------------------------
   nginx-mailcow:
-    image: mailcow/nginx:1.25
+    image: ghcr.io/mailcow/nginx:1.25
     depends_on:
       - sogo-mailcow
       - php-fpm-mailcow
@@ -41,18 +41,17 @@ services:
       - "traefik.http.routers.mailcow-https.tls=true"
       - "traefik.http.routers.mailcow-https.tls.certresolver=letsencrypt"
       - "traefik.http.services.mailcow-svc.loadbalancer.server.port=80"
-      # FIXED: Hardcoded Autoconfig domains to avoid interpolation errors
       - "traefik.http.routers.mailcow-autoconfig.rule=Host(`autoconfig.ztechai.us`) || Host(`autodiscover.ztechai.us`)"
       - "traefik.http.routers.mailcow-autoconfig.entrypoints=websecure"
       - "traefik.http.routers.mailcow-autoconfig.tls=true"
       - "traefik.http.routers.mailcow-autoconfig.tls.certresolver=letsencrypt"
 
   # -------------------------------------------------------------------------
-  # CORE SERVICES (Updated Tags)
+  # CORE SERVICES (Updated to GHCR)
   # -------------------------------------------------------------------------
   
   dockerapi-mailcow:
-    image: mailcow/dockerapi:2.11
+    image: ghcr.io/mailcow/dockerapi:2.11
     restart: always
     environment:
       - DBUSER=${DBUSER}
@@ -83,7 +82,7 @@ services:
           - mysql
 
   redis-mailcow:
-    image: mailcow/redis:7
+    image: ghcr.io/mailcow/redis:7
     restart: always
     volumes:
       - /opt/mailcow-data/redis:/data:rw
@@ -93,7 +92,7 @@ services:
           - redis
 
   clamd-mailcow:
-    image: mailcow/clamd:1.71
+    image: ghcr.io/mailcow/clamd:1.71
     restart: always
     volumes:
       - /opt/mailcow-data/clamd:/var/lib/clamav:rw
@@ -103,7 +102,7 @@ services:
           - clamd
 
   postfix-mailcow:
-    image: mailcow/postfix:1.77
+    image: ghcr.io/mailcow/postfix:1.77
     restart: always
     environment:
       - TZ=${TZ}
@@ -120,7 +119,7 @@ services:
           - postfix
 
   dovecot-mailcow:
-    image: mailcow/dovecot:2.2
+    image: ghcr.io/mailcow/dovecot:2.2
     restart: always
     environment:
       - DOVECOT_MASTER_USER=${DOVECOT_MASTER_USER:-}
@@ -145,7 +144,7 @@ services:
           - dovecot
 
   php-fpm-mailcow:
-    image: mailcow/phpfpm:1.91
+    image: ghcr.io/mailcow/phpfpm:1.91
     restart: always
     depends_on:
       - redis-mailcow
@@ -171,7 +170,7 @@ services:
           - phpfpm
 
   sogo-mailcow:
-    image: mailcow/sogo:1.127
+    image: ghcr.io/mailcow/sogo:1.127
     restart: always
     environment:
       - DBNAME=${DBNAME}
@@ -188,7 +187,7 @@ services:
           - sogo
 
   rspamd-mailcow:
-    image: mailcow/rspamd:1.98
+    image: ghcr.io/mailcow/rspamd:1.98
     restart: always
     environment:
       - TZ=${TZ}
@@ -204,7 +203,7 @@ services:
           - rspamd
 
   acme-mailcow:
-    image: mailcow/acme:1.90
+    image: ghcr.io/mailcow/acme:1.90
     depends_on:
       - nginx-mailcow
     environment:
@@ -220,7 +219,7 @@ services:
           - acme
 
   netfilter-mailcow:
-    image: mailcow/netfilter:1.52
+    image: ghcr.io/mailcow/netfilter:1.52
     restart: always
     volumes:
       - /opt/mailcow-data/conf/netfilter:/etc/netfilter2fail2ban:rw
@@ -229,7 +228,7 @@ services:
     network_mode: "host"
 
   watchdog-mailcow:
-    image: mailcow/watchdog:2.06
+    image: ghcr.io/mailcow/watchdog:2.06
     restart: always
     volumes:
       - /var/run/docker.sock:/var/run/docker.sock:ro
