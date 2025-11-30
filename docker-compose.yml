@@ -265,7 +265,7 @@ networks:
     ipam:
       driver: default
       config:
-        - subnet: 172.22.123.0/24
+        - subnet: 10.123.123.0/24
   dokploy-network:
     external: true
     name: dokploy-network
