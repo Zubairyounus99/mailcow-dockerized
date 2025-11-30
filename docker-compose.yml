@@ -12,6 +12,8 @@ services:
       - redis-mailcow
     command: /bin/bash -c "envsubst < /etc/nginx/conf.d/templates/listen_plain.template > /etc/nginx/conf.d/listen_plain.conf && envsubst < /etc/nginx/conf.d/templates/listen_ssl.template > /etc/nginx/conf.d/listen_ssl.conf && envsubst < /etc/nginx/conf.d/templates/server_name.template > /etc/nginx/conf.d/server_name.conf && nginx -g 'daemon off;'"
     environment:
+      # ADD THIS LINE BELOW:
+      - IPV4_NETWORK=${IPV4_NETWORK:-172.22.1}
       - HTTPS_PORT=${HTTPS_PORT:-8443}
       - HTTP_PORT=${HTTP_PORT:-8080}
       - MAILCOW_HOSTNAME=${MAILCOW_HOSTNAME}
@@ -28,7 +30,6 @@ services:
         aliases:
           - nginx
       dokploy-network:
-    
     labels:
       - "traefik.enable=true"
       - "traefik.docker.network=dokploy-network"
@@ -45,7 +46,7 @@ services:
       - "traefik.http.routers.mailcow-autoconfig.entrypoints=websecure"
       - "traefik.http.routers.mailcow-autoconfig.tls=true"
       - "traefik.http.routers.mailcow-autoconfig.tls.certresolver=letsencrypt"
-
+      
   # -------------------------------------------------------------------------
   # CORE SERVICES (Tags updated from your curl output)
   # -------------------------------------------------------------------------
