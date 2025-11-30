@@ -12,7 +12,7 @@ services:
       - redis-mailcow
     command: /bin/bash -c "envsubst < /etc/nginx/conf.d/templates/listen_plain.template > /etc/nginx/conf.d/listen_plain.conf && envsubst < /etc/nginx/conf.d/templates/listen_ssl.template > /etc/nginx/conf.d/listen_ssl.conf && envsubst < /etc/nginx/conf.d/templates/server_name.template > /etc/nginx/conf.d/server_name.conf && nginx -g 'daemon off;'"
     environment:
-      # ADD THIS LINE BELOW:
+      # Ensure IPV4_NETWORK is passed so Nginx can ping containers
       - IPV4_NETWORK=${IPV4_NETWORK:-172.22.1}
       - HTTPS_PORT=${HTTPS_PORT:-8443}
       - HTTP_PORT=${HTTP_PORT:-8080}
@@ -30,6 +30,7 @@ services:
         aliases:
           - nginx
       dokploy-network:
+    
     labels:
       - "traefik.enable=true"
       - "traefik.docker.network=dokploy-network"
@@ -46,15 +47,17 @@ services:
       - "traefik.http.routers.mailcow-autoconfig.entrypoints=websecure"
       - "traefik.http.routers.mailcow-autoconfig.tls=true"
       - "traefik.http.routers.mailcow-autoconfig.tls.certresolver=letsencrypt"
-      
+
   # -------------------------------------------------------------------------
-  # CORE SERVICES (Tags updated from your curl output)
+  # CORE SERVICES
   # -------------------------------------------------------------------------
   
   dockerapi-mailcow:
     image: ghcr.io/mailcow/dockerapi:2.11
     restart: always
     environment:
+      # ADDED DBHOST
+      - DBHOST=mysql
       - DBUSER=${DBUSER}
       - DBNAME=${DBNAME}
       - DBPASS=${DBPASS}
@@ -83,8 +86,8 @@ services:
           - mysql
 
   redis-mailcow:
-    image: redis:7-alpine
-    # Use Array syntax for command to avoid quoting issues
+    image: redis:7.4.6-alpine
+    # Hardcoded password to ensure stability
     command: ["redis-server", "--requirepass", "SecureRedisPass2025"]
     restart: always
     volumes:
@@ -93,7 +96,6 @@ services:
       mailcow-network:
         aliases:
           - redis
-    # Add a healthcheck so we know if it's alive
     healthcheck:
       test: ["CMD", "redis-cli", "-a", "SecureRedisPass2025", "ping"]
       interval: 10s
@@ -115,6 +117,7 @@ services:
     restart: always
     environment:
       - TZ=${TZ}
+      - DBHOST=mysql
     volumes:
       - /opt/mailcow-data/postfix:/opt/postfix/conf:rw
       - /opt/mailcow-data/postfix/postfix-vol-1:/var/spool/postfix:rw
@@ -133,6 +136,7 @@ services:
     environment:
       - DOVECOT_MASTER_USER=${DOVECOT_MASTER_USER:-}
       - DOVECOT_MASTER_PASS=${DOVECOT_MASTER_PASS:-}
+      - DBHOST=mysql
       - TZ=${TZ}
     volumes:
       - /opt/mailcow-data/dovecot:/etc/dovecot/sql:rw
@@ -158,6 +162,9 @@ services:
     depends_on:
       - redis-mailcow
     environment:
+      # ADDED DBHOST & REDISHOST
+      - DBHOST=mysql
+      - REDISHOST=redis
       - DBNAME=${DBNAME}
       - DBUSER=${DBUSER}
       - DBPASS=${DBPASS}
@@ -182,6 +189,8 @@ services:
     image: ghcr.io/mailcow/sogo:1.136
     restart: always
     environment:
+      # ADDED DBHOST
+      - DBHOST=mysql
       - DBNAME=${DBNAME}
       - DBUSER=${DBUSER}
       - DBPASS=${DBPASS}
@@ -200,6 +209,7 @@ services:
     restart: always
     environment:
       - TZ=${TZ}
+      - REDISHOST=redis
     volumes:
       - /opt/mailcow-data/conf/rspamd/custom:/etc/rspamd/custom:rw
       - /opt/mailcow-data/conf/rspamd/override.d:/etc/rspamd/override.d:rw
@@ -239,6 +249,9 @@ services:
   watchdog-mailcow:
     image: ghcr.io/mailcow/watchdog:2.09
     restart: always
+    environment:
+      - DBHOST=mysql
+      - REDISHOST=redis
     volumes:
       - /var/run/docker.sock:/var/run/docker.sock:ro
       - /opt/mailcow-data/assets/ssl:/etc/ssl/mail:ro
@@ -274,7 +287,7 @@ networks:
     ipam:
       driver: default
       config:
-        - subnet: 10.123.123.0/24
+        - subnet: 172.22.1.0/24
   dokploy-network:
     external: true
     name: dokploy-network
